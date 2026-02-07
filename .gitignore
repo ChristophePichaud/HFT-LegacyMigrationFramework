@@ -54,6 +54,12 @@ out/
 _build/
 
 # IDEs
+# Build directories
+build/
+cmake-build-*/
+.cmake/
+
+# IDE files
 .vscode/
 .idea/
 *.swp
@@ -61,5 +67,13 @@ _build/
 *~
 
 # Test output
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Test outputs
 Testing/
 CTestTestfile.cmake

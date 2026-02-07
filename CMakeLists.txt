@@ -1,88 +1,91 @@
-cmake_minimum_required(VERSION 3.16)
-project(LegacyMigrationFramework LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.15)
+project(HFT-LegacyMigrationFramework VERSION 1.0.0 LANGUAGES CXX)
 
+# C++17 required for compile-time reflection
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Options
 option(BUILD_TESTS "Build unit tests" ON)
-option(USE_POSTGRESQL "Enable PostgreSQL backend" OFF)
-option(USE_SYBASE "Enable Sybase backend" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
+option(WITH_POSTGRESQL "Build with PostgreSQL support" ON)
+option(WITH_SYBASE "Build with Sybase DB-Lib support" OFF)
 
-# Add include directory for header-only libraries
+# Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-if (USE_POSTGRESQL)
+# Find dependencies
+if(WITH_POSTGRESQL)
     find_package(PostgreSQL REQUIRED)
+    include_directories(${PostgreSQL_INCLUDE_DIRS})
+    add_definitions(-DWITH_POSTGRESQL)
 endif()
 
-if (USE_SYBASE)
-    find_path(SYBASE_INCLUDE_DIR sybfront.h)
-    find_library(SYBASE_LIBRARY NAMES sybdb)
-    if (NOT SYBASE_INCLUDE_DIR OR NOT SYBASE_LIBRARY)
-        message(FATAL_ERROR "Sybase DB-Lib not found")
+if(WITH_SYBASE)
+    # Sybase DB-Lib is typically in /opt/sap or custom location
+    find_path(SYBASE_INCLUDE_DIR sybfront.h
+        PATHS /opt/sap/OCS-*/include
+              /usr/local/include
+              /usr/include)
+    
+    find_library(SYBASE_LIBRARY NAMES sybdb
+        PATHS /opt/sap/OCS-*/lib
+              /usr/local/lib
+              /usr/lib)
+    
+    if(SYBASE_INCLUDE_DIR AND SYBASE_LIBRARY)
+        include_directories(${SYBASE_INCLUDE_DIR})
+        add_definitions(-DWITH_SYBASE)
+    else()
+        message(WARNING "Sybase DB-Lib not found. Disabling Sybase support.")
+        set(WITH_SYBASE OFF)
     endif()
 endif()
 
-file(GLOB CORE_DB src/db/*.hpp src/db/*.cpp)
-file(GLOB PG_BACKEND src/pg/*.hpp src/pg/*.cpp)
-file(GLOB SYB_BACKEND src/sybase/*.hpp src/sybase/*.cpp)
-file(GLOB CATALOG src/catalog/*.hpp src/catalog/*.cpp)
-file(GLOB ENTITY src/entity/*.hpp)
-file(GLOB ENTITY_GEN src/entity/generated/*.hpp)
-file(GLOB REPO src/repository/*.hpp)
-file(GLOB REPO_GEN src/repository/generated/*.hpp)
-file(GLOB CODEGEN src/codegen/*.hpp src/codegen/*.cpp)
+# Source files
+set(DB_SOURCES "")
 
-add_library(core STATIC
-    ${CORE_DB}
-    ${CATALOG}
-    ${ENTITY}
-    ${ENTITY_GEN}
-    ${REPO}
-    ${REPO_GEN}
-)
-
-target_include_directories(core PUBLIC src ${CMAKE_SOURCE_DIR}/include)
-
-if (USE_POSTGRESQL)
-    add_library(pg_backend STATIC ${PG_BACKEND})
-    target_include_directories(pg_backend PUBLIC src ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(pg_backend PUBLIC core PostgreSQL::PostgreSQL)
+if(WITH_POSTGRESQL)
+    list(APPEND DB_SOURCES src/db/PostgreSQLConnection.cpp)
 endif()
 
-if (USE_SYBASE)
-    add_library(sybase_backend STATIC ${SYB_BACKEND})
-    target_include_directories(sybase_backend PUBLIC src ${CMAKE_SOURCE_DIR}/include ${SYBASE_INCLUDE_DIR})
-    target_link_libraries(sybase_backend PUBLIC core ${SYBASE_LIBRARY})
+if(WITH_SYBASE)
+    list(APPEND DB_SOURCES src/db/SybaseConnection.cpp)
 endif()
 
-add_executable(lmf_codegen ${CODEGEN})
-target_include_directories(lmf_codegen PRIVATE src ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(lmf_codegen PRIVATE core)
-
-if (BUILD_TESTS)
-    include(FetchContent)
-    FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-    )
-    FetchContent_MakeAvailable(googletest)
-
-    file(GLOB TEST_SOURCES tests/*.cpp)
-
-    add_executable(unit_tests ${TEST_SOURCES})
-    target_include_directories(unit_tests PRIVATE src tests ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(unit_tests PRIVATE core gtest_main)
-
-    if (USE_POSTGRESQL)
-        target_link_libraries(unit_tests PRIVATE pg_backend)
+# Library target (only create if we have sources)
+if(DB_SOURCES)
+    add_library(hft-legacy-migration SHARED ${DB_SOURCES})
+    
+    # Link libraries
+    if(WITH_POSTGRESQL)
+        target_link_libraries(hft-legacy-migration ${PostgreSQL_LIBRARIES})
     endif()
 
-    if (USE_SYBASE)
-        target_link_libraries(unit_tests PRIVATE sybase_backend)
+    if(WITH_SYBASE)
+        target_link_libraries(hft-legacy-migration ${SYBASE_LIBRARY})
     endif()
+    
+    # Install targets
+    install(TARGETS hft-legacy-migration
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+else()
+    # Create a header-only interface library when no database backend is enabled
+    add_library(hft-legacy-migration INTERFACE)
+    message(STATUS "Building as header-only library (no database backends enabled)")
+endif()
 
-    include(GoogleTest)
-    gtest_discover_tests(unit_tests)
+install(DIRECTORY include/hft DESTINATION include)
+
+# Tests
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# Examples
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
 endif()
