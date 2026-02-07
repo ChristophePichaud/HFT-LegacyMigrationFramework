@@ -3,9 +3,12 @@
 #include <string>
 #include <vector>
 
+// Forward declarations
+class PgConnection;
+
 class PgPreparedStatement : public IDBPreparedStatement {
 public:
-    explicit PgPreparedStatement(std::string sql);
+    explicit PgPreparedStatement(std::string sql, PgConnection* conn);
     ~PgPreparedStatement() override;
 
     void bindInt(int index, int value) override;
@@ -18,4 +21,5 @@ public:
 private:
     std::string _sql;
     std::vector<std::string> _params;
+    PgConnection* _conn{nullptr};
 };

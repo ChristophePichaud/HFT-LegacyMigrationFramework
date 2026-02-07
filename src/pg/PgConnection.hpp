@@ -3,6 +3,10 @@
 #include <memory>
 #include <string>
 
+// Forward declare libpq type
+struct pg_conn;
+typedef struct pg_conn PGconn;
+
 class PgConnection : public IDBConnection {
 public:
     explicit PgConnection(const std::string& conninfo);
@@ -17,6 +21,10 @@ public:
     std::unique_ptr<IDBTransaction>
     beginTransaction() override;
 
+    // Access to underlying connection
+    PGconn* getConnection() { return _conn; }
+
 private:
     std::string _conninfo;
+    PGconn* _conn{nullptr};
 };

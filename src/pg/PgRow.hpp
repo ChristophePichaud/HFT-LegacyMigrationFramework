@@ -3,11 +3,15 @@
 #include <vector>
 #include <memory>
 
+// Forward declare libpq type
+struct pg_result;
+typedef struct pg_result PGresult;
+
 class IDBValue;
 
 class PgRow : public IDBRow {
 public:
-    PgRow();
+    PgRow(PGresult* result, int rowNum);
     ~PgRow() override;
 
     std::size_t columnCount() const override;
