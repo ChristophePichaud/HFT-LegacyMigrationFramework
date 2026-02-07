@@ -40,6 +40,20 @@
 # debug information files
 *.dwo
 
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Build directories
+build/
+out/
+_build/
+
+# IDEs
 # Build directories
 build/
 cmake-build-*/
@@ -52,6 +66,7 @@ cmake-build-*/
 *.swo
 *~
 
+# Test output
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/
