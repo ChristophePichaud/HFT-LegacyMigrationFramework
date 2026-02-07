@@ -3,11 +3,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>
+#include <filesystem>
 
 // Helper function to ensure directory exists
 static void ensureDirectory(const std::string& path) {
-    mkdir(path.c_str(), 0755);
+    try {
+        std::filesystem::create_directories(path);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "[EntityGenerator] Failed to create directory: " << e.what() << "\n";
+    }
 }
 
 // Helper function to map SQL types to C++ types

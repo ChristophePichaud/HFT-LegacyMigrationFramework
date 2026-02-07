@@ -49,9 +49,12 @@ std::string SybPreparedStatement::buildFinalSQL() {
     std::string result = _sql;
     for (size_t i = 0; i < _params.size(); ++i) {
         std::string placeholder = "$" + std::to_string(i + 1);
-        size_t pos = result.find(placeholder);
-        if (pos != std::string::npos) {
+        
+        // Replace all occurrences of this placeholder
+        size_t pos = 0;
+        while ((pos = result.find(placeholder, pos)) != std::string::npos) {
             result.replace(pos, placeholder.length(), _params[i]);
+            pos += _params[i].length();
         }
     }
     return result;

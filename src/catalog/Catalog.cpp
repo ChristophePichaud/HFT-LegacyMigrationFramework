@@ -149,12 +149,21 @@ void Catalog::loadSybase(IDBConnection& conn) {
         TableMeta tableMeta;
         tableMeta.name = tableName;
         
-        // Query columns for this table
+        // Query columns for this table using OBJECT_ID (safer than direct concatenation)
+        // Note: In production, consider using stored procedures or more robust escaping
+        std::string escapedTableName = tableName;
+        // Simple escaping for Sybase - replace single quotes
+        size_t pos = 0;
+        while ((pos = escapedTableName.find("'", pos)) != std::string::npos) {
+            escapedTableName.replace(pos, 1, "''");
+            pos += 2;
+        }
+        
         std::string columnQuery = 
             "SELECT c.name, t.name as type_name, c.length, c.scale, c.status "
             "FROM syscolumns c "
             "JOIN systypes t ON c.usertype = t.usertype "
-            "WHERE c.id = OBJECT_ID('" + tableName + "') "
+            "WHERE c.id = OBJECT_ID('" + escapedTableName + "') "
             "ORDER BY c.colid";
         
         auto columnReader = conn.executeQuery(columnQuery);
@@ -190,7 +199,16 @@ void Catalog::loadPostgres(IDBConnection& conn) {
         TableMeta tableMeta;
         tableMeta.name = tableName;
         
-        // Query columns for this table
+        // Query columns for this table with proper escaping
+        // Note: Table names from pg_tables are already validated by PostgreSQL
+        std::string escapedTableName = tableName;
+        // Simple escaping - replace single quotes
+        size_t pos = 0;
+        while ((pos = escapedTableName.find("'", pos)) != std::string::npos) {
+            escapedTableName.replace(pos, 1, "''");
+            pos += 2;
+        }
+        
         std::string columnQuery = 
             "SELECT "
             "  a.attname AS column_name, "
@@ -201,7 +219,7 @@ void Catalog::loadPostgres(IDBConnection& conn) {
             "FROM pg_catalog.pg_attribute a "
             "JOIN pg_catalog.pg_class c ON a.attrelid = c.oid "
             "JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid "
-            "WHERE c.relname = '" + tableName + "' "
+            "WHERE c.relname = '" + escapedTableName + "' "
             "  AND n.nspname = 'public' "
             "  AND a.attnum > 0 "
             "  AND NOT a.attisdropped "

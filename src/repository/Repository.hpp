@@ -258,7 +258,9 @@ protected:
         std::string escaped;
         for (char c : str) {
             if (c == '\'') {
-                escaped += "''";
+                escaped += "''";  // SQL standard: double the single quote
+            } else if (c == '\\') {
+                escaped += "\\\\";  // Escape backslash for safety
             } else {
                 escaped += c;
             }
