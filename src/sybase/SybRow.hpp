@@ -3,11 +3,15 @@
 #include <vector>
 #include <memory>
 
+// Forward declare DB-Lib type
+struct tds_dbproc;
+typedef struct tds_dbproc DBPROCESS;
+
 class IDBValue;
 
 class SybRow : public IDBRow {
 public:
-    SybRow();
+    explicit SybRow(DBPROCESS* dbproc);
     ~SybRow() override;
 
     std::size_t columnCount() const override;

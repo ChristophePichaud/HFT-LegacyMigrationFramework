@@ -3,9 +3,12 @@
 #include <string>
 #include <vector>
 
+// Forward declaration
+class SybConnection;
+
 class SybPreparedStatement : public IDBPreparedStatement {
 public:
-    explicit SybPreparedStatement(std::string sql);
+    explicit SybPreparedStatement(std::string sql, SybConnection* conn);
     ~SybPreparedStatement() override;
 
     void bindInt(int index, int value) override;
@@ -18,4 +21,7 @@ public:
 private:
     std::string _sql;
     std::vector<std::string> _params;
+    SybConnection* _conn{nullptr};
+    
+    std::string buildFinalSQL();
 };
