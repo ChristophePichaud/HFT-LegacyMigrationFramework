@@ -95,8 +95,16 @@ private:
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
             now.time_since_epoch()) % 1000;
         
+        // Thread-safe time conversion
+        std::tm tm_buf;
+#if defined(_WIN32) || defined(_WIN64)
+        localtime_s(&tm_buf, &time);
+#else
+        localtime_r(&time, &tm_buf);
+#endif
+        
         std::ostringstream oss;
-        oss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+        oss << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S");
         oss << "." << std::setfill('0') << std::setw(3) << ms.count();
         return oss.str();
     }

@@ -106,8 +106,12 @@ void EntityGenerator::generateEntities(const Catalog& catalog, const std::string
         oss << "    using Entity = " << tableName << ";\n\n";
         oss << "    static constexpr std::string_view tableName  = \"" << tableName << "\";\n";
         
-        // Assume first column is primary key
+        // Primary key detection: Assume first column for now
+        // TODO: Query database metadata for actual primary key
+        // PostgreSQL: SELECT ... FROM pg_constraint WHERE contype = 'p'
+        // Sybase: EXEC sp_pkeys @table_name = '...'
         if (!tableMeta.columns.empty()) {
+            oss << "    // NOTE: Assumed first column is primary key. Verify in database.\n";
             oss << "    static constexpr std::string_view primaryKey = \"" << tableMeta.columns[0].name << "\";\n\n";
         }
         

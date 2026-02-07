@@ -200,7 +200,9 @@ void Catalog::loadPostgres(IDBConnection& conn) {
         tableMeta.name = tableName;
         
         // Query columns for this table with proper escaping
-        // Note: Table names from pg_tables are already validated by PostgreSQL
+        // NOTE: Table names from pg_tables are validated by PostgreSQL's system catalog
+        // but we still escape for defense in depth. For maximum security in untrusted
+        // environments, consider using prepared statements with PQexecParams.
         std::string escapedTableName = tableName;
         // Simple escaping - replace single quotes
         size_t pos = 0;

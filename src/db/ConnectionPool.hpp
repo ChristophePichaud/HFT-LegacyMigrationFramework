@@ -115,14 +115,15 @@ public:
     }
 
 private:
-    // Check if connection is healthy (simple implementation)
+    // Check if connection is healthy
     bool isConnectionHealthy(IDBConnection* conn) {
         if (!conn) return false;
         
         try {
             // Try a simple query to test connection
-            // This is a simplified check - real implementation would be database-specific
-            return true;  // Assume healthy for now
+            // This is database-agnostic - SELECT 1 works on most databases
+            auto reader = conn->executeQuery("SELECT 1");
+            return reader && reader->next();
         } catch (...) {
             return false;
         }
