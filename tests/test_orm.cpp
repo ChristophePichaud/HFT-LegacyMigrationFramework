@@ -5,6 +5,36 @@
 
 using namespace hft::orm;
 
+// Mock result set for testing
+class MockResultSet : public hft::db::IResultSet {
+public:
+    bool next() override { return false; }
+    int32_t getInt(int) const override { return 0; }
+    int64_t getLong(int) const override { return 0; }
+    double getDouble(int) const override { return 0.0; }
+    std::string getString(int) const override { return ""; }
+    bool isNull(int) const override { return false; }
+    int getColumnCount() const override { return 0; }
+    std::string getColumnName(int) const override { return ""; }
+};
+
+// Mock statement for testing
+class MockStatement : public hft::db::IStatement {
+public:
+    void bindInt(int, int32_t) override {}
+    void bindLong(int, int64_t) override {}
+    void bindDouble(int, double) override {}
+    void bindString(int, const std::string&) override {}
+    void bindNull(int) override {}
+    
+    std::shared_ptr<hft::db::IResultSet> executeQuery() override {
+        return std::make_shared<MockResultSet>();
+    }
+    
+    int executeUpdate() override { return 0; }
+    void reset() override {}
+};
+
 // Mock connection for testing
 class MockConnection : public hft::db::IConnection {
 public:
@@ -14,7 +44,7 @@ public:
     
     std::shared_ptr<hft::db::IStatement> createStatement(const std::string& sql) override {
         lastSQL = sql;
-        return nullptr;
+        return std::make_shared<MockStatement>();
     }
     
     std::shared_ptr<hft::db::ITransaction> beginTransaction() override { return nullptr; }

@@ -54,22 +54,28 @@ if(WITH_SYBASE)
     list(APPEND DB_SOURCES src/db/SybaseConnection.cpp)
 endif()
 
-# Library target
-add_library(hft-legacy-migration SHARED ${DB_SOURCES})
+# Library target (only create if we have sources)
+if(DB_SOURCES)
+    add_library(hft-legacy-migration SHARED ${DB_SOURCES})
+    
+    # Link libraries
+    if(WITH_POSTGRESQL)
+        target_link_libraries(hft-legacy-migration ${PostgreSQL_LIBRARIES})
+    endif()
 
-# Link libraries
-if(WITH_POSTGRESQL)
-    target_link_libraries(hft-legacy-migration ${PostgreSQL_LIBRARIES})
+    if(WITH_SYBASE)
+        target_link_libraries(hft-legacy-migration ${SYBASE_LIBRARY})
+    endif()
+    
+    # Install targets
+    install(TARGETS hft-legacy-migration
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+else()
+    # Create a header-only interface library when no database backend is enabled
+    add_library(hft-legacy-migration INTERFACE)
+    message(STATUS "Building as header-only library (no database backends enabled)")
 endif()
-
-if(WITH_SYBASE)
-    target_link_libraries(hft-legacy-migration ${SYBASE_LIBRARY})
-endif()
-
-# Install targets
-install(TARGETS hft-legacy-migration
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
 
 install(DIRECTORY include/hft DESTINATION include)
 

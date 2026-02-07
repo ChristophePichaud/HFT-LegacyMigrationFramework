@@ -29,6 +29,7 @@ struct TableInfo {
     std::string name;
     std::vector<ColumnInfo> columns;
     
+    TableInfo() = default;
     TableInfo(const std::string& n) : name(n) {}
     
     void addColumn(const ColumnInfo& column) {

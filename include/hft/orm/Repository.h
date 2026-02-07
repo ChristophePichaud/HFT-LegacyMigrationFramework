@@ -2,6 +2,7 @@
 
 #include "hft/db/IConnection.h"
 #include "hft/db/IStatement.h"
+#include "hft/db/IResultSet.h"
 #include "hft/reflection/EntityTraits.h"
 #include <memory>
 #include <vector>
