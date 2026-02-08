@@ -53,12 +53,13 @@ The executable will be located in `build/examples/HFT-Demo`.
 | `--postgresql` | `-p` | Use PostgreSQL database |
 | `--user` | `-u` | Database user |
 | `--password` | `-w` | Database password |
-| `--server` | | Sybase server name |
-| `--dbname` | | PostgreSQL database name |
-| `--test-connection` | | Test database connection |
-| `--test-catalog` | | Test catalog functionality |
-| `--test-dbreader` | | Test DBReader functionality |
-| `--test-json` | | Test JSON export (specify table name) |
+| `--host` | - | PostgreSQL host (default: localhost) |
+| `--server` | - | Sybase server name |
+| `--dbname` | - | PostgreSQL database name |
+| `--test-connection` | - | Test database connection |
+| `--test-catalog` | - | Test catalog functionality |
+| `--test-dbreader` | - | Test DBReader functionality |
+| `--test-json` | - | Test JSON export (specify table name) |
 | `--details` | `-d` | Show detailed information (for catalog) |
 | `--output` | `-o` | Output file path (default: output.json) |
 | `--help` | `-h` | Print usage information |

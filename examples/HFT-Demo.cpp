@@ -554,19 +554,19 @@ int main(int argc, char* argv[]) {
         // Test catalog
         if (result.count("test-catalog")) {
             bool showDetails = result.count("details") > 0;
-            success = testCatalog(conn, dbType, showDetails);
+            success = testCatalog(conn, dbType, showDetails) && success;
         }
         
         // Test DBReader
         if (result.count("test-dbreader")) {
-            success = testDBReader(conn, dbType);
+            success = testDBReader(conn, dbType) && success;
         }
         
         // Test JSON export
         if (result.count("test-json")) {
             std::string tableName = result["test-json"].as<std::string>();
             std::string outputFile = result["output"].as<std::string>();
-            success = testJSONExport(conn, tableName, outputFile);
+            success = testJSONExport(conn, tableName, outputFile) && success;
         }
         
         if (conn) {
