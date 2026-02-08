@@ -67,6 +67,40 @@ cmake .. -DUSE_POSTGRESQL=OFF -DUSE_SYBASE=ON -DBUILD_TESTS=ON
 make -j$(nproc)
 ```
 
+### Windows Build (PowerShell / Visual Studio)
+
+Use the Visual Studio generator for MSVC toolchains (recommended on Windows).
+
+```powershell
+# Configure for Visual Studio 2022 x64 (point to local libpqxx install)
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DLIBPQXX_ROOT="E:/Dev/libpqxx-7.10.5" -DWITH_POSTGRESQL=ON -DBUILD_TESTS=ON
+
+# Build Release
+cmake --build build --config Release
+
+# Run tests
+ctest --test-dir build -C Release --output-on-failure
+```
+
+If you prefer Ninja (fast iterative builds) with MSVC toolchain:
+
+```powershell
+cmake -S . -B build -G "Ninja" -A x64 -DLIBPQXX_ROOT="E:/Dev/libpqxx-7.10.5" -DWITH_POSTGRESQL=ON
+cmake --build build --config Release
+```
+
+If `libpqxx` was installed with a CMake package config (`libpqxx-config.cmake`), you can alternatively set `CMAKE_PREFIX_PATH`:
+
+```powershell
+cmake -S . -B build -DCMAKE_PREFIX_PATH="E:/Dev/libpqxx-7.10.5" -DWITH_POSTGRESQL=ON
+```
+
+Windows-specific notes:
+- On MSVC you link against `.lib` import libraries and need matching `.dll` files at runtime (for example `libpq.dll`).
+- Ensure libpq/libpqxx were built with the same architecture (x64 vs x86) and runtime (MD/MT) as your project.
+- Add the PostgreSQL `bin` folder (or the folder containing `libpqxx`/`libpq` DLLs) to `PATH` when running executables or tests.
+
+
 ### Build Options
 
 | Option | Default | Description |
@@ -212,6 +246,13 @@ If tests fail:
 # Check for specific failures
 ./unit_tests --gtest_filter=*FailingTest*
 ```
+
+### Windows Troubleshooting
+
+- **CMake did not find libpqxx**: verify the `libpqxx-config.cmake` file exists under `E:/Dev/libpqxx-7.10.5` (common locations: `cmake/`, `lib/cmake/libpqxx/`). If present, use `-DLIBPQXX_ROOT="E:/Dev/libpqxx-7.10.5"` or `-DCMAKE_PREFIX_PATH` to point CMake at it.
+- **Missing DLL at runtime**: locate `libpq.dll` (PostgreSQL client) and add its folder to `PATH` or copy the DLL next to the executable.
+- **Linker unresolved symbols**: ensure you are linking the correct import library for your toolchain (`.lib` for MSVC, `.a` for MinGW) and that the library was built with the same runtime flags.
+- **Exported target name differs**: open the `libpqxx` config file and search for exported target names (`libpqxx::pqxx` or `pqxx::pqxx`)—if it uses a different name, update `CMakeLists.txt` accordingly.
 
 ## Development
 
