@@ -53,6 +53,27 @@ struct EntityTraits<Product> {
 };
 }} // namespace hft::reflection
 
+// Helper function to validate table/column names to prevent SQL injection
+bool isValidIdentifier(const std::string& identifier) {
+    if (identifier.empty() || identifier.length() > 128) {
+        return false;
+    }
+    
+    // Check first character (must be letter or underscore)
+    if (!std::isalpha(identifier[0]) && identifier[0] != '_') {
+        return false;
+    }
+    
+    // Check remaining characters (letters, digits, underscores)
+    for (size_t i = 1; i < identifier.length(); i++) {
+        if (!std::isalnum(identifier[i]) && identifier[i] != '_') {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // Helper function to print separator
 void printSeparator(const std::string& title = "") {
     std::cout << "\n";
@@ -106,7 +127,7 @@ bool testSybaseConnection(const std::string& user, const std::string& password, 
 }
 
 // Test PostgreSQL connection
-bool testPostgreSQLConnection(const std::string& user, const std::string& password, const std::string& dbname) {
+bool testPostgreSQLConnection(const std::string& user, const std::string& password, const std::string& dbname, const std::string& host) {
 #ifdef WITH_POSTGRESQL
     printSeparator("Testing PostgreSQL Connection");
     
@@ -114,9 +135,9 @@ bool testPostgreSQLConnection(const std::string& user, const std::string& passwo
         auto conn = std::make_shared<PostgreSQLConnection>();
         
         // Build connection string
-        std::string connStr = "host=localhost dbname=" + dbname + " user=" + user + " password=" + password;
+        std::string connStr = "host=" + host + " dbname=" + dbname + " user=" + user + " password=" + password;
         
-        std::cout << "Connecting to PostgreSQL database: " << dbname << std::endl;
+        std::cout << "Connecting to PostgreSQL database: " << dbname << " on " << host << std::endl;
         if (!conn->open(connStr)) {
             std::cerr << "Failed to connect: " << conn->getLastError() << std::endl;
             return false;
@@ -178,6 +199,13 @@ bool testCatalog(std::shared_ptr<IConnection> conn, const std::string& dbType, b
         std::cout << "\n--- Tables ---" << std::endl;
         while (result && result->next()) {
             std::string tableName = result->getString(0);
+            
+            // Validate table name to prevent SQL injection
+            if (!isValidIdentifier(tableName)) {
+                std::cerr << "Warning: Skipping invalid table name: " << tableName << std::endl;
+                continue;
+            }
+            
             std::cout << "  • " << tableName << std::endl;
             tableCount++;
             
@@ -185,41 +213,53 @@ bool testCatalog(std::shared_ptr<IConnection> conn, const std::string& dbType, b
             if (showDetails) {
                 std::cout << "    Columns:" << std::endl;
                 
-                std::string colQuery;
+                // Use parameterized query for PostgreSQL, validated identifier for Sybase
                 if (dbType == "postgresql") {
-                    colQuery = "SELECT column_name, data_type, character_maximum_length, is_nullable "
-                              "FROM information_schema.columns "
-                              "WHERE table_name='" + tableName + "' AND table_schema='public' "
-                              "ORDER BY ordinal_position";
-                } else if (dbType == "sybase") {
-                    colQuery = "SELECT c.name, t.name, c.length, c.status "
-                              "FROM syscolumns c, systypes t "
-                              "WHERE c.id = OBJECT_ID('" + tableName + "') "
-                              "AND c.usertype = t.usertype "
-                              "ORDER BY c.colid";
-                }
-                
-                auto colStmt = conn->createStatement(colQuery);
-                auto colResult = colStmt->executeQuery();
-                
-                while (colResult && colResult->next()) {
-                    std::string colName = colResult->getString(0);
-                    std::string colType = colResult->getString(1);
-                    std::string colLength = colResult->isNull(2) ? "" : colResult->getString(2);
-                    std::string nullable = "";
+                    auto colStmt = conn->createStatement(
+                        "SELECT column_name, data_type, character_maximum_length, is_nullable "
+                        "FROM information_schema.columns "
+                        "WHERE table_name=$1 AND table_schema='public' "
+                        "ORDER BY ordinal_position");
+                    colStmt->bindString(1, tableName);
+                    auto colResult = colStmt->executeQuery();
                     
-                    if (dbType == "postgresql") {
-                        nullable = colResult->getString(3);
-                    }
-                    
-                    std::cout << "      - " << colName << " (" << colType;
-                    if (!colLength.empty()) {
-                        std::cout << "(" << colLength << ")";
-                    }
-                    if (dbType == "postgresql") {
+                    while (colResult && colResult->next()) {
+                        std::string colName = colResult->getString(0);
+                        std::string colType = colResult->getString(1);
+                        std::string colLength = colResult->isNull(2) ? "" : colResult->getString(2);
+                        std::string nullable = colResult->getString(3);
+                        
+                        std::cout << "      - " << colName << " (" << colType;
+                        if (!colLength.empty()) {
+                            std::cout << "(" << colLength << ")";
+                        }
                         std::cout << ", nullable: " << nullable;
+                        std::cout << ")" << std::endl;
                     }
-                    std::cout << ")" << std::endl;
+                } else if (dbType == "sybase") {
+                    // Sybase doesn't support parameterized queries in the same way,
+                    // but we've validated the identifier above
+                    std::string colQuery = 
+                        "SELECT c.name, t.name, c.length, c.status "
+                        "FROM syscolumns c, systypes t "
+                        "WHERE c.id = OBJECT_ID('" + tableName + "') "
+                        "AND c.usertype = t.usertype "
+                        "ORDER BY c.colid";
+                    
+                    auto colStmt = conn->createStatement(colQuery);
+                    auto colResult = colStmt->executeQuery();
+                    
+                    while (colResult && colResult->next()) {
+                        std::string colName = colResult->getString(0);
+                        std::string colType = colResult->getString(1);
+                        std::string colLength = colResult->isNull(2) ? "" : colResult->getString(2);
+                        
+                        std::cout << "      - " << colName << " (" << colType;
+                        if (!colLength.empty()) {
+                            std::cout << "(" << colLength << ")";
+                        }
+                        std::cout << ")" << std::endl;
+                    }
                 }
             }
         }
@@ -313,9 +353,15 @@ bool testJSONExport(std::shared_ptr<IConnection> conn, const std::string& tableN
     printSeparator("Testing JSON Export");
     
     try {
+        // Validate table name to prevent SQL injection
+        if (!isValidIdentifier(tableName)) {
+            std::cerr << "Error: Invalid table name. Table names must contain only letters, digits, and underscores." << std::endl;
+            return false;
+        }
+        
         std::cout << "Exporting table '" << tableName << "' to JSON..." << std::endl;
         
-        // Read all data from the table
+        // Use validated identifier in query (safe after validation)
         auto stmt = conn->createStatement("SELECT * FROM " + tableName);
         auto result = stmt->executeQuery();
         
@@ -386,6 +432,7 @@ int main(int argc, char* argv[]) {
             ("p,postgresql", "Use PostgreSQL database")
             ("u,user", "Database user", cxxopts::value<std::string>()->default_value(""))
             ("w,password", "Database password", cxxopts::value<std::string>()->default_value(""))
+            ("host", "PostgreSQL host (default: localhost)", cxxopts::value<std::string>()->default_value("localhost"))
             ("server", "Sybase server name", cxxopts::value<std::string>()->default_value(""))
             ("dbname", "Database name", cxxopts::value<std::string>()->default_value(""))
             ("test-connection", "Test database connection")
@@ -400,9 +447,13 @@ int main(int argc, char* argv[]) {
         
         if (result.count("help")) {
             std::cout << options.help() << std::endl;
+            std::cout << "\nSecurity Note:" << std::endl;
+            std::cout << "  For production use, avoid passing credentials via command-line arguments." << std::endl;
+            std::cout << "  Consider using environment variables or configuration files with restricted permissions." << std::endl;
             std::cout << "\nExamples:" << std::endl;
             std::cout << "  Test PostgreSQL connection:" << std::endl;
             std::cout << "    ./HFT-Demo -p --test-connection -u postgres -w password --dbname testdb" << std::endl;
+            std::cout << "    ./HFT-Demo -p --test-connection -u postgres -w password --dbname testdb --host 192.168.1.100" << std::endl;
             std::cout << "\n  Test Sybase connection:" << std::endl;
             std::cout << "    ./HFT-Demo -s --test-connection -u sa -w password --server SYBASE_SERVER" << std::endl;
             std::cout << "\n  Test catalog with details:" << std::endl;
@@ -437,6 +488,7 @@ int main(int argc, char* argv[]) {
         std::string password = result["password"].as<std::string>();
         std::string server = result["server"].as<std::string>();
         std::string dbname = result["dbname"].as<std::string>();
+        std::string host = result["host"].as<std::string>();
         
         // Test connection
         if (result.count("test-connection")) {
@@ -451,7 +503,7 @@ int main(int argc, char* argv[]) {
                     std::cerr << "Error: PostgreSQL connection requires --user, --password, and --dbname" << std::endl;
                     return 1;
                 }
-                return testPostgreSQLConnection(user, password, dbname) ? 0 : 1;
+                return testPostgreSQLConnection(user, password, dbname, host) ? 0 : 1;
             }
         }
         
@@ -483,7 +535,7 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
             conn = std::make_shared<PostgreSQLConnection>();
-            std::string connStr = "host=localhost dbname=" + dbname + " user=" + user + " password=" + password;
+            std::string connStr = "host=" + host + " dbname=" + dbname + " user=" + user + " password=" + password;
             if (!conn->open(connStr)) {
                 std::cerr << "Failed to connect: " << conn->getLastError() << std::endl;
                 return 1;
