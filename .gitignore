@@ -52,6 +52,7 @@ Makefile
 build/
 out/
 _build/
+_codeql_build_dir/
 
 # IDEs
 # Build directories
