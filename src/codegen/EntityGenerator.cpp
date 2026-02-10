@@ -1,4 +1,4 @@
-#include "EntityGenerator.hpp"
+#include "codegen/EntityGenerator.hpp"
 #include "catalog/Catalog.hpp"
 #include <iostream>
 #include <fstream>

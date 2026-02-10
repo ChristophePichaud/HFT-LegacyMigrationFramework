@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 
+#ifdef WITH_SYBASE
+
 // Forward declare DB-Lib type
 struct tds_dbproc;
 typedef struct tds_dbproc DBPROCESS;
@@ -20,3 +22,5 @@ public:
 private:
     std::vector<std::unique_ptr<IDBValue>> _values;
 };
+
+#endif

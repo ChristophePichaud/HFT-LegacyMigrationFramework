@@ -1,4 +1,4 @@
-#include "SybConnection.hpp"
+#include "sybase/SybConnection.hpp"
 #include "db/DBException.hpp"
 #include "sybase/SybReader.hpp"
 #include "sybase/SybPreparedStatement.hpp"
@@ -9,6 +9,8 @@
 #include <sybfront.h>
 #include <sybdb.h>
 #endif
+
+#ifdef WITH_SYBASE
 
 bool SybConnection::_initialized = false;
 
@@ -36,7 +38,7 @@ void SybConnection::parseConnInfo(const std::string& conninfo,
 
 SybConnection::SybConnection(const std::string& conninfo)
     : _conninfo(conninfo) {
-#ifdef WITH_SYBASE
+
     // Initialize DB-Lib (only once)
     if (!_initialized) {
         if (dbinit() == FAIL) {
@@ -78,24 +80,20 @@ SybConnection::SybConnection(const std::string& conninfo)
             throw DBException("Sybase: failed to use database: " + database);
         }
     }
-#else
-    (void)conninfo;
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 SybConnection::~SybConnection() {
-#ifdef WITH_SYBASE
+
     if (_dbproc) {
         dbclose(_dbproc);
         _dbproc = nullptr;
     }
-#endif
+
 }
 
 std::unique_ptr<IDBReader>
 SybConnection::executeQuery(const std::string& sql) {
-#ifdef WITH_SYBASE
+
     if (!_dbproc) {
         throw DBException("SybConnection::executeQuery: Connection is null");
     }
@@ -116,28 +114,20 @@ SybConnection::executeQuery(const std::string& sql) {
     }
     
     return std::make_unique<SybReader>(_dbproc);
-#else
-    (void)sql;
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 std::unique_ptr<IDBPreparedStatement>
 SybConnection::prepare(const std::string& sql) {
-#ifdef WITH_SYBASE
+
     if (!_dbproc) {
         throw DBException("SybConnection::prepare: Connection is null");
     }
     return std::make_unique<SybPreparedStatement>(sql, this);
-#else
-    (void)sql;
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 std::unique_ptr<IDBTransaction>
 SybConnection::beginTransaction() {
-#ifdef WITH_SYBASE
+
     if (!_dbproc) {
         throw DBException("SybConnection::beginTransaction: Connection is null");
     }
@@ -157,7 +147,9 @@ SybConnection::beginTransaction() {
     }
     
     return std::make_unique<SybTransaction>(this);
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
+// #else
+//     throw DBException("Sybase support not compiled in");
+
 }
+
+#endif

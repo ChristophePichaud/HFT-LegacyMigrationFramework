@@ -2,6 +2,9 @@
 #include "db/IDBReader.hpp"
 #include <memory>
 
+#ifdef WITH_SYBASE
+
+
 // Forward declare DB-Lib type
 struct tds_dbproc;
 typedef struct tds_dbproc DBPROCESS;
@@ -20,3 +23,6 @@ private:
     DBPROCESS* _dbproc{nullptr};
     std::unique_ptr<IDBRow> _row;
 };
+
+
+#endif

@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#ifdef WITH_SYBASE
+
 // Forward declare DB-Lib types
 struct tds_dbproc;
 typedef struct tds_dbproc DBPROCESS;
@@ -35,3 +37,5 @@ private:
                       std::string& server, std::string& user, 
                       std::string& password, std::string& database);
 };
+
+#endif

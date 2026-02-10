@@ -1,4 +1,4 @@
-#include "RepositoryGenerator.hpp"
+#include "codegen/RepositoryGenerator.hpp"
 #include "catalog/Catalog.hpp"
 #include <iostream>
 #include <fstream>

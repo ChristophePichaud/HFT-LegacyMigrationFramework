@@ -1,4 +1,4 @@
-#include "SybPreparedStatement.hpp"
+#include "sybase/SybPreparedStatement.hpp"
 #include "db/DBException.hpp"
 #include "sybase/SybReader.hpp"
 #include "sybase/SybConnection.hpp"
@@ -8,6 +8,8 @@
 #include <sybfront.h>
 #include <sybdb.h>
 #endif
+
+#ifdef WITH_SYBASE
 
 SybPreparedStatement::SybPreparedStatement(std::string sql, SybConnection* conn)
     : _sql(std::move(sql)), _conn(conn) {}
@@ -61,7 +63,7 @@ std::string SybPreparedStatement::buildFinalSQL() {
 }
 
 std::unique_ptr<IDBReader> SybPreparedStatement::executeQuery() {
-#ifdef WITH_SYBASE
+
     if (!_conn || !_conn->getDbProcess()) {
         throw DBException("SybPreparedStatement::executeQuery: Connection is null");
     }
@@ -85,13 +87,10 @@ std::unique_ptr<IDBReader> SybPreparedStatement::executeQuery() {
     }
     
     return std::make_unique<SybReader>(dbproc);
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 void SybPreparedStatement::executeUpdate() {
-#ifdef WITH_SYBASE
+
     if (!_conn || !_conn->getDbProcess()) {
         throw DBException("SybPreparedStatement::executeUpdate: Connection is null");
     }
@@ -113,7 +112,8 @@ void SybPreparedStatement::executeUpdate() {
     while (dbresults(dbproc) != NO_MORE_RESULTS) {
         // Empty loop to consume all results
     }
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
+// #else
+//     throw DBException("Sybase support not compiled in");
 }
+
+#endif

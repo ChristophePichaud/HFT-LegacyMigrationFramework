@@ -1,4 +1,4 @@
-#include "PgConnection.hpp"
+#include "pg/PgConnection.hpp"
 #include "db/DBException.hpp"
 #include "pg/PgReader.hpp"
 #include "pg/PgPreparedStatement.hpp"

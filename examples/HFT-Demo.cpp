@@ -565,7 +565,9 @@ int main(int argc, char* argv[]) {
         // Test JSON export
         if (result.count("test-json")) {
             std::string tableName = result["test-json"].as<std::string>();
+            std::cout << "tableName " << tableName << std::endl;
             std::string outputFile = result["output"].as<std::string>();
+            std::cout << "outputFile " << outputFile << std::endl;
             success = testJSONExport(conn, tableName, outputFile) && success;
         }
         

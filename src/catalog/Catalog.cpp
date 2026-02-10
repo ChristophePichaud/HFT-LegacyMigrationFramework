@@ -1,10 +1,11 @@
-#include "Catalog.hpp"
+#include "catalog/Catalog.hpp"
 #include "db/IDBConnection.hpp"
 #include "db/IDBReader.hpp"
 #include "db/IDBRow.hpp"
 #include "db/IDBValue.hpp"
 #include "db/DBException.hpp"
 #include <sstream>
+#include <algorithm>
 
 Catalog::Catalog(IDBConnection& conn, DbDialect dialect) {
     switch (dialect) {

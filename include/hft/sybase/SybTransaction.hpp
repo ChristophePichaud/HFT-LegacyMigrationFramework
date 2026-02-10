@@ -1,6 +1,8 @@
 #pragma once
 #include "db/IDBTransaction.hpp"
 
+#ifdef WITH_SYBASE
+
 // Forward declaration
 class SybConnection;
 
@@ -16,3 +18,6 @@ private:
     SybConnection* _conn{nullptr};
     bool _active{true};
 };
+
+
+#endif

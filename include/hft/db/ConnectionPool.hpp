@@ -1,5 +1,6 @@
 #pragma once
 #include "db/IDBConnection.hpp"
+#include "db/IDBReader.hpp"
 #include <memory>
 #include <vector>
 #include <queue>

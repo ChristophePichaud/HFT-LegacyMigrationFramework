@@ -1,4 +1,4 @@
-#include "SybRow.hpp"
+#include "sybase/SybRow.hpp"
 #include "sybase/SybValue.hpp"
 #include "db/DBException.hpp"
 
@@ -7,8 +7,9 @@
 #include <sybdb.h>
 #endif
 
-SybRow::SybRow(DBPROCESS* dbproc) {
 #ifdef WITH_SYBASE
+SybRow::SybRow(DBPROCESS* dbproc) {
+
     if (!dbproc) {
         throw DBException("SybRow: dbproc is null");
     }
@@ -63,10 +64,6 @@ SybRow::SybRow(DBPROCESS* dbproc) {
         
         _values.push_back(std::make_unique<SybValue>(value, isNull));
     }
-#else
-    (void)dbproc;
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 SybRow::~SybRow() = default;
@@ -81,3 +78,5 @@ const IDBValue& SybRow::operator[](std::size_t idx) const {
     }
     return *_values[idx];
 }
+
+#endif

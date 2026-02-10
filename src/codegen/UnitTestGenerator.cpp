@@ -1,4 +1,4 @@
-#include "UnitTestGenerator.hpp"
+#include "codegen/UnitTestGenerator.hpp"
 #include "catalog/Catalog.hpp"
 #include <iostream>
 #include <fstream>

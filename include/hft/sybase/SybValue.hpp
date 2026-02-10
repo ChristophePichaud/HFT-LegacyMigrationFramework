@@ -2,6 +2,8 @@
 #include "db/IDBValue.hpp"
 #include <string>
 
+#ifdef WITH_SYBASE
+
 class SybValue : public IDBValue {
 public:
     SybValue();
@@ -16,3 +18,6 @@ private:
     std::string _value;
     bool _null{true};
 };
+
+
+#endif

@@ -14,6 +14,7 @@ option(WITH_SYBASE "Build with Sybase DB-Lib support" OFF)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include/hft)
 
 # Find dependencies
 if(WITH_POSTGRESQL)
@@ -62,38 +63,64 @@ if(WITH_SYBASE)
     endif()
 endif()
 
+
 # Source files
 set(DB_SOURCES "")
 
+# Add all .cpp files from src except pg and sybase folders
+file(GLOB_RECURSE ALL_SRC_FILES
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+)
+file(GLOB_RECURSE PG_SRC_FILES
+    "${CMAKE_SOURCE_DIR}/src/pg/*.cpp"
+)
+file(GLOB_RECURSE SYBASE_SRC_FILES
+    "${CMAKE_SOURCE_DIR}/src/sybase/*.cpp"
+)
+
+
+# Add files from src/pg folder
+list(APPEND DB_SOURCES ${ALL_SRC_FILES} ${PG_SRC_FILES})
+
+# Only add Sybase sources if WITH_SYBASE is ON
+if(WITH_SYBASE)
+    list(APPEND DB_SOURCES ${SYBASE_SRC_FILES})
+endif()
+
+# Add PostgreSQL and Sybase specific files if enabled
 if(WITH_POSTGRESQL)
-    list(APPEND DB_SOURCES src/db/PostgreSQLConnection.cpp)
 endif()
 
 if(WITH_SYBASE)
-    list(APPEND DB_SOURCES src/db/SybaseConnection.cpp)
 endif()
 
-# Library target (only create if we have sources)
-if(DB_SOURCES)
-    add_library(hft-legacy-migration SHARED ${DB_SOURCES})
-    
-    # Link libraries
-    if(WITH_POSTGRESQL)
-        target_link_libraries(hft-legacy-migration PRIVATE ${PostgreSQL_LIBRARIES})
-        # If libpqxx was found by find_package(libpqxx CONFIG), link its imported target.
-        if(TARGET libpqxx::pqxx)
-            target_link_libraries(hft-legacy-migration PRIVATE libpqxx::pqxx)
-        elseif(TARGET pqxx::pqxx)
-            target_link_libraries(hft-legacy-migration PRIVATE pqxx::pqxx)
-        endif()
-    endif()
 
-    if(WITH_SYBASE)
-        target_link_libraries(hft-legacy-migration PRIVATE ${SYBASE_LIBRARY})
-    endif()
-    
+
+# Library targets (only create if we have sources)
+if(DB_SOURCES)
+    # Shared library (.dll/.so/.dylib)
+    add_library(hft-legacy-migration SHARED ${DB_SOURCES})
+    # Static library (.lib/.a)
+    add_library(hft-legacy-migration-static STATIC ${DB_SOURCES})
+    set_target_properties(hft-legacy-migration-static PROPERTIES OUTPUT_NAME "hft-legacy-migration")
+
+    # Link libraries for both targets
+    foreach(_target hft-legacy-migration hft-legacy-migration-static)
+        if(WITH_POSTGRESQL)
+            target_link_libraries(${_target} PRIVATE ${PostgreSQL_LIBRARIES})
+            if(TARGET libpqxx::pqxx)
+                target_link_libraries(${_target} PRIVATE libpqxx::pqxx)
+            elseif(TARGET pqxx::pqxx)
+                target_link_libraries(${_target} PRIVATE pqxx::pqxx)
+            endif()
+        endif()
+        if(WITH_SYBASE)
+            target_link_libraries(${_target} PRIVATE ${SYBASE_LIBRARY})
+        endif()
+    endforeach()
+
     # Install targets
-    install(TARGETS hft-legacy-migration
+    install(TARGETS hft-legacy-migration hft-legacy-migration-static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 else()

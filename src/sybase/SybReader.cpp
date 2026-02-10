@@ -1,4 +1,4 @@
-#include "SybReader.hpp"
+#include "sybase/SybReader.hpp"
 #include "sybase/SybRow.hpp"
 #include "db/DBException.hpp"
 
@@ -7,18 +7,17 @@
 #include <sybdb.h>
 #endif
 
+#ifdef WITH_SYBASE
+
 SybReader::SybReader(DBPROCESS* dbproc)
     : _dbproc(dbproc) {
-#ifndef WITH_SYBASE
     (void)dbproc;
     throw DBException("Sybase support not compiled in");
-#endif
 }
 
 SybReader::~SybReader() = default;
 
 bool SybReader::next() {
-#ifdef WITH_SYBASE
     if (!_dbproc) {
         return false;
     }
@@ -34,12 +33,11 @@ bool SybReader::next() {
     // ret should be REG_ROW or one of the compute row types
     _row = std::make_unique<SybRow>(_dbproc);
     return true;
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 IDBRow& SybReader::row() {
     if (!_row) throw DBException("SybReader::row: no row");
     return *_row;
 }
+
+#endif

@@ -1,6 +1,8 @@
-#include "SybValue.hpp"
+#include "sybase/SybValue.hpp"
 #include "db/DBException.hpp"
 #include <cstdlib>
+
+#ifdef WITH_SYBASE
 
 SybValue::SybValue() = default;
 
@@ -25,3 +27,5 @@ std::string SybValue::asString() const {
     if (_null) return {};
     return _value;
 }
+
+#endif

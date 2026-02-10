@@ -1,0 +1,89 @@
+
+========================================
+  HFT-Demo - Legacy Migration Framework
+========================================
+Database Type: PostgreSQL
+✓ Connected to postgresql
+
+========================================
+  Testing Catalog Functionality
+========================================
+Fetching table list from postgresql...
+
+--- Tables ---
+  • Affair
+  • Approach
+  • Country
+  • DataOrigin
+  • Energy
+  • Financer
+  • Geography
+  • Lang
+  • Material
+  • MaterialCategory
+  • Moa
+  • MoaUser
+  • Process
+  • Project
+  • ProjectInput
+  • ProjectStatus
+  • RefConstruction
+  • RefElement
+  • RefEnergy
+  • RefEnergyValue
+  • RefHypothesis
+  • RefMaterial
+  • Segmentation1
+  • Segmentation2
+  • SegmentationUnit
+  • Simultation
+  • Site
+  • SiteUser
+  • SourceTrajectory
+  • Study
+  • StudyAcv
+  • StudyConstruction
+  • StudyElement
+  • StudyHypothesis
+  • StudyUF
+  • TesterPourcentage
+  • TrajHypothesis
+  • TrajIntensity
+  • Trajectory
+  • TrajectoryValue
+  • Translation
+  • Unit
+  • User
+  • UserRole
+  • ViewACV_Coef
+  • ViewACV_CoefElement
+  • ViewAccess
+  • ViewAdmin_RefElem
+  • ViewAdmin_RefEnergy
+  • ViewAdmin_RefTrajHypo
+  • ViewEtude
+  • ViewIHM_Synthese
+  • ViewM1_Simulation
+  • ViewM1_Synthese
+  • ViewM1_Travail
+  • ViewM2_FEMatCalcul
+  • ViewM2_FEMatResti
+  • ViewM2_FEMaterial
+  • ViewM2_Pourcentage
+  • ViewM2_RefTrajectory
+  • ViewM2_Trajectory
+  • ViewM2_Travail1
+  • View_Materiaux
+  • View_nbcomp
+  • WorkNature
+  • WorkSubType
+  • WorkType
+  • __EFMigrationsHistory
+
+✓ Total tables found: 68
+
+✓ Connection closed
+
+========================================
+  Demo Completed
+========================================

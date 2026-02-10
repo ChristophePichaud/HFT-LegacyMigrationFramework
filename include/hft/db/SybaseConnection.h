@@ -4,10 +4,14 @@
 #include "IStatement.h"
 #include "IResultSet.h"
 #include "ITransaction.h"
+#ifdef WITH_SYBASE
 #include <sybfront.h>
 #include <sybdb.h>
+#endif
 #include <memory>
 #include <string>
+
+#ifdef WITH_SYBASE
 
 namespace hft {
 namespace db {
@@ -107,3 +111,4 @@ private:
 
 } // namespace db
 } // namespace hft
+#endif

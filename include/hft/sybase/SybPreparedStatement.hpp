@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#ifdef WITH_SYBASE
+
 // Forward declaration
 class SybConnection;
 
@@ -25,3 +27,6 @@ private:
     
     std::string buildFinalSQL();
 };
+
+
+#endif

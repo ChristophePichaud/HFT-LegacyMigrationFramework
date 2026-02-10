@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
 enum class LogLevel {
     DEBUG,
@@ -59,9 +60,9 @@ public:
         // Write to console
         if (_logToConsole) {
             if (level >= LogLevel::ERROR) {
-                std::cerr << logMessage;
+                std::cout << logMessage << std::endl;
             } else {
-                std::cout << logMessage;
+                std::cout << logMessage << std::endl;
             }
         }
         

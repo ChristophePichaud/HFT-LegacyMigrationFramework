@@ -1,4 +1,4 @@
-#include "SybTransaction.hpp"
+#include "sybase/SybTransaction.hpp"
 #include "db/DBException.hpp"
 #include "sybase/SybConnection.hpp"
 
@@ -6,6 +6,8 @@
 #include <sybfront.h>
 #include <sybdb.h>
 #endif
+
+#ifdef WITH_SYBASE
 
 SybTransaction::SybTransaction(SybConnection* conn)
     : _conn(conn) {}
@@ -22,7 +24,7 @@ SybTransaction::~SybTransaction() {
 }
 
 void SybTransaction::commit() {
-#ifdef WITH_SYBASE
+
     if (!_active) throw DBException("SybTransaction::commit: not active");
     if (!_conn || !_conn->getDbProcess()) {
         throw DBException("SybTransaction::commit: Connection is null");
@@ -44,13 +46,10 @@ void SybTransaction::commit() {
     }
     
     _active = false;
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
 }
 
 void SybTransaction::rollback() {
-#ifdef WITH_SYBASE
+
     if (!_active) throw DBException("SybTransaction::rollback: not active");
     if (!_conn || !_conn->getDbProcess()) {
         throw DBException("SybTransaction::rollback: Connection is null");
@@ -72,7 +71,6 @@ void SybTransaction::rollback() {
     }
     
     _active = false;
-#else
-    throw DBException("Sybase support not compiled in");
-#endif
 }
+
+#endif

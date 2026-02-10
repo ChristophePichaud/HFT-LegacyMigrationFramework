@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iostream>
 
+#ifdef WITH_SYBASE
+
 namespace hft {
 namespace db {
 
@@ -10,7 +12,8 @@ bool SybaseConnection::initialized_ = false;
 
 // Error handlers
 static int err_handler(DBPROCESS* dbproc, int severity, int dberr, int oserr,
-                       char* dberrstr, char* oserrstr) {
+                       char* dberrstr, char* oserrstr) 
+{
     if ((dbproc == nullptr) || (DBDEAD(dbproc))) {
         return INT_CANCEL;
     }
@@ -334,3 +337,5 @@ bool SybaseTransaction::isActive() const {
 
 } // namespace db
 } // namespace hft
+
+#endif
