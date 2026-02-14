@@ -44,6 +44,14 @@ A modern C++ system designed to unify legacy database access with a clean, exten
 - Repository class scaffolding
 - Database-agnostic code
 
+### Asio SQL Service (NEW!)
+- **Boost.Asio-based client-server architecture** - High-performance async I/O
+- **Multiple query response formats** - Raw rows, JSON, binary, streaming
+- **Cross-platform** - Windows and Linux support (ISO C++17)
+- **Flexible deployment** - Standalone server or embedded
+- **Protocol-based communication** - Custom binary protocol with message types
+- See [asio-sql-service/README.md](asio-sql-service/README.md) for complete documentation
+
 ## Building
 
 ### Prerequisites
